@@ -310,16 +310,38 @@ for i, sentence in enumerate(sentences):
 
 # build the model: 
 print('Build model...')
+neurons = 100
 main_input = Input(shape=(maxlen, num_features), name='main_input')
 # train a 2-layer LSTM with one shared layer
-l1 = LSTM(100, implementation=2, kernel_initializer='glorot_uniform', return_sequences=True, dropout=0.2)(main_input) # the shared layer
-b1 = BatchNormalization()(l1)
-l2_1 = LSTM(100, implementation=2, kernel_initializer='glorot_uniform', return_sequences=False, dropout=0.2)(b1) # the layer specialized in activity prediction
-b2_1 = BatchNormalization()(l2_1)
-l2_2 = LSTM(100, implementation=2, kernel_initializer='glorot_uniform', return_sequences=False, dropout=0.2)(b1) # the layer specialized in time prediction
-b2_2 = BatchNormalization()(l2_2)
-act_output = Dense(len(target_chars), activation='softmax', kernel_initializer='glorot_uniform', name='act_output')(b2_1)
-time_output = Dense(1, kernel_initializer='glorot_uniform', name='time_output')(b2_2)
+shared = 1
+layers = 2
+b_prev = main_input
+for i in range(0,shared-1):
+    l_cur = LSTM(neurons, implementation=2, kernel_initializer='glorot_uniform', return_sequences=True, dropout=0.2)(b_prev) # the shared layer
+    b_prev = BatchNormalization()(l_cur)
+if (shared == layers):
+    l_cur = LSTM(neurons, implementation=2, kernel_initializer='glorot_uniform', return_sequences=False, dropout=0.2)(b_prev) # the layer specialized in time prediction
+    b_fin_act = BatchNormalization()(l_cur)
+    l_cur = LSTM(neurons, implementation=2, kernel_initializer='glorot_uniform', return_sequences=False, dropout=0.2)(b_prev) # the layer specialized in time prediction
+    b_fin_time = BatchNormalization()(l_cur)
+else:
+    if shared == 0:
+        b_prev_time = b_prev_act = main_input
+    else :
+        b_prev_act = b_prev
+        b_prev_time = b_prev
+    for i in range(0,layers-shared):
+        l_cur = LSTM(neurons, implementation=2, kernel_initializer='glorot_uniform', return_sequences=True, dropout=0.2)(b_prev_act) # the layer specialized in activity prediction
+        b_prev_act = BatchNormalization()(l_cur)
+        l_cur = LSTM(neurons, implementation=2, kernel_initializer='glorot_uniform', return_sequences=True, dropout=0.2)(b_prev_time) # the layer specialized in activity prediction
+        b_prev_time = BatchNormalization()(l_cur)
+    l_cur = LSTM(neurons, implementation=2, kernel_initializer='glorot_uniform', return_sequences=False, dropout=0.2)(b_prev_act) # the layer specialized in time prediction
+    b_fin_act = BatchNormalization()(l_cur)
+    l_cur = LSTM(neurons, implementation=2, kernel_initializer='glorot_uniform', return_sequences=False, dropout=0.2)(b_prev_time) # the layer specialized in time prediction
+    b_fin_time = BatchNormalization()(l_cur)
+
+act_output = Dense(len(target_chars), activation='softmax', kernel_initializer='glorot_uniform', name='act_output')(b_fin_act)
+time_output = Dense(1, kernel_initializer='glorot_uniform', name='time_output')(b_fin_time)
 
 model = Model(inputs=[main_input], outputs=[act_output, time_output])
 
