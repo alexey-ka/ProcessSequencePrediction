@@ -1,3 +1,5 @@
+This branch proposes some minor improvements in customization of the LSTM parameters and additional preview of the results. The next step of this project is adaptaion of the code for Python 3.  
+  
 Supplementary material for the article ["Predictive Business Process Monitoring with
 LSTM Neural Networks"](https://arxiv.org/abs/1612.02130) by Niek Tax, Ilya Verenich, [Marcello La Rosa](http://www.marcellolarosa.com/) and [Marlon Dumas](http://kodu.ut.ee/~dumas/).
 
